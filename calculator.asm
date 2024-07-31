@@ -8,6 +8,7 @@ ask_number2: .asciiz "Please input integer 2: "
 answer_string: .asciiz "Answer: "
 buffer: .space 2
 confirmation_string: .asciiz "\n\nTry again? [Y/N]: "
+zero_error_string: .asciiz "Error 105: Cannot divide by zero!"
 
 .text
 main:
@@ -36,25 +37,38 @@ main:
     j       default
 
 addition:
-    jal      user_input
+    jal    user_input
     add    $s2, $s0, $s1
     j      display_results
 
 subtraction:
-    jal      user_input
+    jal    user_input
     sub    $s2, $s0, $s1
     j      display_results
 
 multiplication:
-    jal      user_input
+    jal    user_input
     mul    $s2, $s0, $s1
     j      display_results
 
 division:
-    jal      user_input
+    jal    user_input
+
+    # Catch error
+    beq    $s1, $zero, cannot_divide_by_zero
+
     div    $s0, $s1
     mflo   $s2  # Move the quotient into $s2
     j      display_results
+
+cannot_divide_by_zero:
+
+    # Print error
+    li      $v0, 4
+    la      $a0, zero_error_string
+    syscall
+
+    j       tryAgain
 
 user_input:
     # Query 1: Please input integer 1:
