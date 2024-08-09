@@ -8,8 +8,8 @@
 #
   .data
   .globl  message  
-message:  .asciiz "The value of f is: "   # __??
-extra:    .asciiz "\nHave a nice day :)"  # __??
+message:  .asciiz "The value of f is: "   # message label containing a text inside the " "
+extra:    .asciiz "\nHave a nice day :)"  # same as message label but has a new line at the beginning
 thankyou: .asciiz "\n\n\n ... Thank you :)"
   .align 2                  # align directive will be explained later
 
