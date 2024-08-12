@@ -33,10 +33,10 @@ main:                       # main has to be a global label
 
         # PRINTING
         
-        # print text data "message"
+        # print label "message"
 # li    $v0, 1              # ERROR
   li    $v0, 4              # Correction to service call 4, to print string
-  la    $a0, message        # load the text data "message" to the argument register
+  la    $a0, message        # load the label "message" to the argument register
   syscall
   
         # print integer value of $s0
@@ -44,13 +44,14 @@ main:                       # main has to be a global label
   add   $a0, $0, $s0        # load the value of $s0 toe the argument register
   syscall
   
-        # print text data "extra"
+        # print label "extra"
   li    $v0, 4              # service call 4 to print string
-  la    $a0, extra          # load text data "extra" to $a0
+  la    $a0, extra          # load label "extra" to $a0
   syscall
-
+      
+       # print label "thankyou"
   li    $v0, 4              
-  la    $a0, thankyou          
+  la    $a0, thankyou          D
   syscall
   
         # Usual stuff at the end of the main

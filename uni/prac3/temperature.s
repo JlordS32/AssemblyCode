@@ -13,24 +13,25 @@ main:                                                   # main has to be a globa
     li      $v0,    4
     syscall
 
-    # __?? insert here the code to get an integer number entered from the keyboard
-    # __?? hint: use appropriate syscalls
+    # Syscall 5 to read integer
+    li      $v0,    5
+    syscall
 
     # CALCULATING
 
-    addi    $t0,    $v0,    -32                         # __??
-    mul     $t0,    $t0,    5                           # __??
-    div     $t0,    $t0,    9                           # __??
+    addi    $t0,    $v0,    -32                         # Compute -32 + the input stored at $v0.
+    mul     $t0,    $t0,    5                           # Multiply the computed value by 5
+    div     $t0,    $t0,    9                           # Divide the result by 9
 
     # PRINTING
 
-    la      $a0,    result                              # __?
-    li      $v0,    4                                   # __?
-    syscall                                             # __?
+    la      $a0,    result                              # Assign the memory address of the label "result"
+    li      $v0,    4                                   # Syscall 4 to print string
+    syscall                                             # Initiate syscall
 
-    move    $a0,    $t0                                 # __?
-    li      $v0,    1                                   # __?
-    syscall                                             # __?
+    move    $a0,    $t0                                 # Copy the value of $t0 to the argument register $a0
+    li      $v0,    1                                   # Sycall 1 to print integer
+    syscall                                             # Initiate syscall
 
 .data
 input:  .asciiz "\n\nEnter temperature in Fahrenheit: "
