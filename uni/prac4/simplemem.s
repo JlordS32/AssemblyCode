@@ -26,8 +26,10 @@ message1:   .asciiz "\nInput value for p: " #string to print
     li      $v0,    4                       # print_string (system call 4)
     la      $a0,    message1                # takes the address of string as an argument
     syscall
+    
     li      $v0,    5                       # read_int (system call 5)
     syscall
+
     add     $s3,    $0,         $v0         # move to $s3
     sw      $s3,    p                       # p is stored
     #------------------------------------getting q
