@@ -1,9 +1,11 @@
+#---------DATA SECTION-----------#
 .data
-.align 2
-Z: .word 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 
-X: .word 0
+.align 2    # Align the values by the multiple of 4
+Z: .word 2, 4, 6, 8, 10, 12, 14, 16, 18, 20     # Setting up the array for Z
+X: .word 0  # Defining X, so it's stored in the memory
 result: .asciiz "The value of X is: "
 
+#----------MAIN PROGRAM---------#
 .text
 .globl  main
 main:
