@@ -5,6 +5,7 @@ x: .word 0
 result: .asciiz "The value of X is: "
 
 .text
+.globl  main
 main:
     # STORE ADDRESS
     addu    $s7, $0, $ra    # Store address to $s7
