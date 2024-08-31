@@ -35,8 +35,11 @@ add_n_square:
     sw          $s0, 0($sp)     # Save $s0
 
     # ARITHMETIC OPERATIONS
-    add         $s0, $a0, $a1
-    move        $a0, $s0
+    # We use calculate the sum of the two parameters 
+    # passed into this function and we store it to $s0.
+    add         $s0, $a0, $a1   # $s0 = $a0 + $a1
+    move        $a0, $s0        # Load $s0 as the argument 
+                                # for coming function call
     
     jal         sqrt            # Call sqrt() function
 
