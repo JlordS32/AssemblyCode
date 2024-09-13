@@ -34,7 +34,6 @@ main:
     jal     fill_array      # fill_aray for P
 
     # fILL UP ARRAY for Q
-    li      $t0, 0          # Index
     la      $a0, P          # Load the address of P
     jal     accumulate
 
