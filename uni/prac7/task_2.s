@@ -1,5 +1,5 @@
 .data
-query: .asciiz "Enter a number: "
+query: .asciiz "Enter an integer (p): "
 unsigned: .asciiz "Unsigned value: "
 signed: .asciiz "Signed value: "
 endl: .asciiz "\n"
@@ -110,7 +110,7 @@ exit:
     jal     print_newline   # print newline
 
     li      $v0, 4          # print_str (system call 4)        
-    la      $a0, terminate  # Load 'unsigned' data
+    la      $a0, terminate  # Load 'terminate' data
     syscall
 
     # RESTORE ADDRESS

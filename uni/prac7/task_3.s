@@ -1,10 +1,19 @@
+# TASK III
+
 .data
-query: .asciiz "Enter a number: "
+# String variables
+query: .asciiz "Enter an integer (p): "
+query_n: .asciiz "Enter an integer for starting bit position (m): "
+query_m: .asciiz "Enter the amount of bits to extract from m position: "
 unsigned: .asciiz "Unsigned value: "
 signed: .asciiz "Signed value: "
 endl: .asciiz "\n"
 terminate: .asciiz "Program terminated. "
+
+# Integer variables
 p: .word 0
+n: .word 0
+m: .word 0
 
 .text
 .globl main
@@ -14,24 +23,35 @@ main:
     addu    $s7, $ra, $0     # Save address first to
 
 loop:
-    # QUERY
+    # QUERY P
     # -----------------
-    li      $v0, 4          # print_str (system call 4)
+    # Query 'p'
     la      $a0, query      # load 'query' data
-    syscall
-
-    li      $v0, 5          # read_int (system call 5)
-    syscall
+    jal     input           # Call input()
     sw      $v0, p          # Store value to 'p'
 
     # CONDITION CHECK
     # -----------------
     lw      $t0, p          # Load 'p' to $to
-    beqz    $t0, exit       # Branch to exit if zero.
+    beqz    $t0, exit       # Branch to exit if zero
+
+    # QUERY M and N
+    # -----------------
+    # Query 'm'
+    la      $a0, query_m    # load 'query_m' data
+    jal     input           # Call input()
+    sw      $v0, m          # Store value to 'm'
+
+    # Query 'n'
+    la      $a0, query_n    # load 'query_n' data
+    jal     input           # Call input()
+    sw      $v0, n          # Store value to 'n'
 
     # FUNCTION CALL
     # -----------------
-    lw      $a0, p          # Load 'p' as argument
+    lw      $a0, p          # Load 'p' as first argument.
+    lw      $a1, m          # Load 'm' as second argument.
+    lw      $a2, n          # Load 'm' as third argument.
     jal     extract         # Call extract()
     move    $s0, $v0
 
@@ -68,6 +88,20 @@ loop:
     jal     print_newline   # print newline
 
     j       loop            # Continue
+
+# Function: input()
+# Desc: Takes a message as param
+# Returns: Input from user
+input:
+    # Print query
+    li      $v0, 4          # print_str (system call 4)   
+    syscall
+
+    # Get input from user
+    li      $v0, 5          # read_int (system call 5)
+    syscall
+    
+    jr      $ra             # Return to the caller
 
 # Function: print_newline()
 # Desc: Prints a new line
@@ -110,7 +144,7 @@ exit:
     jal     print_newline   # print newline
 
     li      $v0, 4          # print_str (system call 4)        
-    la      $a0, terminate  # Load 'unsigned' data
+    la      $a0, terminate  # Load 'terminate' data
     syscall
 
     # RESTORE ADDRESS
