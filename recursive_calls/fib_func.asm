@@ -40,26 +40,3 @@ main:
 
     li      $t1, 0
     li      $t2, 10
-
-loop:
-    bgt     $t1, $t2, end_loop
-
-    move    $a0, $t1
-    jal     fibonacci
-
-    move    $a0, $v0
-    li      $v0, 1
-    syscall
-
-    li      $v0, 4
-    la      $a0, endl
-    syscall
-
-    addi    $t1, $t1, 1
-
-    j       loop
-
-end_loop:
-    li      $v0, 10
-    syscall
-
