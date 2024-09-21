@@ -6,20 +6,8 @@ query: .asciiz "Enter an integer: "
 main:
     move    $s7, $ra
 
-    # Query user
-    li      $v0, 4
-    la      $a0, query
-    syscall
-
-    # Read int
-    li      $v0, 5
-    syscall
-
-    move    $s0, $v0
-    sra     $t0, $s0, 2
-
-    li      $t1, 0xffff
-    and     $t3, $t0, $t1
+    li      $t0, 0x80000000
+    addu    $t0, $t0, -1
 
     j       exit
 

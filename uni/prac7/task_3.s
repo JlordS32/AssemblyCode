@@ -2,18 +2,20 @@
 
 .data
 # String variables
-query: .asciiz "Enter an integer (p): "
-query_n: .asciiz "Enter an integer for starting bit position (m): "
-query_m: .asciiz "Enter the amount of bits to extract from m position: "
+prompt_p: .asciiz "Enter value for p (0 to terminate): "
+prompt_n: .asciiz "Enter value for n: "
+prompt_m: .asciiz "Enter value for m: "
 unsigned: .asciiz "Unsigned value: "
 signed: .asciiz "Signed value: "
 endl: .asciiz "\n"
 terminate: .asciiz "Program terminated. "
+error: .asciiz "Error: n + m must not exceed 32."
 
 # Integer variables
 p: .word 0
 n: .word 0
 m: .word 0
+max: .word 32
 
 .text
 .globl main
@@ -23,10 +25,9 @@ main:
     addu    $s7, $ra, $0     # Save address first to
 
 loop:
-    # QUERY P
+    # PROMPT FOR P
     # -----------------
-    # Query 'p'
-    la      $a0, query      # load 'query' data
+    la      $a0, prompt_p   # load 'prompt' data
     jal     input           # Call input()
     sw      $v0, p          # Store value to 'p'
 
@@ -35,24 +36,24 @@ loop:
     lw      $t0, p          # Load 'p' to $to
     beqz    $t0, exit       # Branch to exit if zero
 
-    # QUERY M and N
+    # PROMPT N AND M
     # -----------------
-    # Query 'm'
-    la      $a0, query_m    # load 'query_m' data
+    # Prompt for 'n'
+    la      $a0, prompt_n   # load 'prompt_n' data
+    jal     input           # Call input()
+    sw      $v0, n          # Store value to 'n'
+    
+    # Prompt for 'm'
+    la      $a0, prompt_m   # load 'prompt_m' data
     jal     input           # Call input()
     sw      $v0, m          # Store value to 'm'
 
-    # Query 'n'
-    la      $a0, query_n    # load 'query_n' data
-    jal     input           # Call input()
-    sw      $v0, n          # Store value to 'n'
-
-    # FUNCTION CALL
+    # FUNCTION CALL: extraExt()
     # -----------------
-    lw      $a0, p          # Load 'p' as first argument.
-    lw      $a1, m          # Load 'm' as second argument.
-    lw      $a2, n          # Load 'm' as third argument.
-    jal     extract         # Call extract()
+    lw      $a0, p          # Pass p
+    lw      $a1, n          # Pass n
+    lw      $a2, m          # Pass m
+    jal     extraExt        # Call extraExt()
     move    $s0, $v0
 
     # OUTPUT
@@ -65,7 +66,7 @@ loop:
     syscall
 
     li      $v0, 1          # print_int (system call 1)
-    move    $a0, $s0        # Copy the result from extract() to print
+    move    $a0, $s0        # Copy the result from extraExt() to print
     syscall
 
     # Display signed
@@ -79,7 +80,7 @@ loop:
     syscall
 
     li      $v0, 1          # print_int (system call 1)
-    move    $a0, $s0        # Copy the result from extract() to print
+    move    $a0, $s0        # Copy the result from extraExt() to print
     syscall
 
     # END
@@ -89,11 +90,12 @@ loop:
 
     j       loop            # Continue
 
-# Function: input()
+# Function: input(query)
+# Params: query = message to pritn
 # Desc: Takes a message as param
 # Returns: Input from user
 input:
-    # Print query
+    # Print prompt
     li      $v0, 4          # print_str (system call 4)   
     syscall
 
@@ -112,33 +114,84 @@ print_newline:
 
     jr      $ra             # Return to caller
 
-# Function: extract()
+# Function: extraExt(p, n, m)
+# Params: p = number to extract
+#         n = length
+#         m = starting bit
 # Desc: Extracts the most significant 5 bits starting at position bit 3.
 # Return: Extracted field
-extract:
+extraExt:
     # Save Stack
-    sub     $sp, $sp, 8     # Make a space for two items
-    sw      $s0, 4 ($sp)    # Save register $s0
-    sw      $s1, 0 ($sp)    # Save register $s1
+    sub     $sp, $sp, 16    # Make a space for three items
+    sw      $ra, 12 ($sp)   # Save return address
+    sw      $s0, 8 ($sp)    # Save register $s0
+    sw      $s1, 4 ($sp)    # Save register $s1
+    sw      $s2, 0 ($sp)    # Save register $s2
 
-    # Copy
-    move    $s0, $a0        # Copy the value over to $s0
+    # Copy arguments to save registers
+    move    $s0, $a0        # Copy p to $s0
+    move    $s1, $a1        # Copy n to $s1
+    move    $s2, $a2        # Copy m to $s2
 
-    # Mask
-    li      $s1, 0x1f       # Mask to extract 5-bit
-    sll     $s1, $s1, 3     # Move mask bits by 3 bit places to the left
-    and     $s1, $s1, $s0   # Apply mask
+    # VALIDATE 
+    # ----------------
+    lw      $t0, max        # Load MAX 
+    add     $t1, $s1, $s2   # $t1 = $s1 + $s2: Adding last two args
+    bgt     $t1, $t0, max_error # Branch exit if the sum of $s1 + $s2 is greater than MAX.
+
+    # MASKING PROCESS
+    # -----------------
+    move    $a0, $s1        # Pass n
+    move    $a1, $s2        # Pass m
+    jal     create_mask     # Call create_mask()
+    move    $t0, $v0        # Load return value to $t0
+
+    and     $s0, $t0, $s0   # Extract fields
 
     # Adjustments
-    sra     $s1, $s1, 3     # Move least significant bit at 3, for readjusment and retain sign
-    move    $v0, $s1        # Finally, we can return 
+    sra     $v0, $s0, $s2   # Reposition back to 0
 
     # Restore stack
-    lw      $s0, 0 ($sp)    # Restore $s0
-    lw      $s1, 4 ($sp)    # Restore $s1
-    add     $sp, $sp, 8     # Free up stack
+    lw      $s2, 0 ($sp)    # Restore s2
+    lw      $s1, 4 ($sp)    # Restore s1
+    lw      $s0, 8 ($sp)    # Restore s0
+    lw      $ra, 12 ($sp)   # Restore ra
+    add     $sp, $sp, 16    # Free up stack
 
     jr      $ra             # Return to caller
+
+# Function: create_mask(n, m)
+# Params: n = length
+#         m = starting bit position
+# Desc: This function makes a mask based on n length and m bit position
+# Return: Mask
+create_mask:
+    # Save stack
+    sub     $sp, $sp, 4     # Make a space for one item
+    sw      $s0, 0 ($sp)    # Save $s0
+
+    # Setting up mask with n
+    li      $s0, 1          # Starting mask
+    sll     $s0, $s0, $a0   # Move bits to the left by n times.
+    addu    $s0, $s0, -1    # Subtract by 1. The result should be the mask
+
+    # Offsetting using m
+    sll     $v0, $s0, $a1   # Finally, offset the mask by m bits.
+
+    # Restore stack
+    lw      $s0, 0 ($sp)    # Restore $ra
+    add     $sp, $sp, 4     # Free up stack
+
+    jr      $ra             # Return to caller
+
+max_error:
+    li      $v0, 4          # print_str (system call 4)
+    la      $a0, error      # Load 'max_error_msg'
+    syscall
+
+    jal     print_newline   # Print newline
+
+    j       exit            # Jump exit
 
 exit:
     jal     print_newline   # print newline

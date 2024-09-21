@@ -1,5 +1,7 @@
+# TASK II
+
 .data
-query: .asciiz "Enter an integer (p): "
+prompt: .asciiz "Enter value for p (0 to terminate): "
 unsigned: .asciiz "Unsigned value: "
 signed: .asciiz "Signed value: "
 endl: .asciiz "\n"
@@ -14,10 +16,10 @@ main:
     addu    $s7, $ra, $0     # Save address first to
 
 loop:
-    # QUERY
+    # PROMPT
     # -----------------
     li      $v0, 4          # print_str (system call 4)
-    la      $a0, query      # load 'query' data
+    la      $a0, prompt     # load prompt data
     syscall
 
     li      $v0, 5          # read_int (system call 5)
@@ -31,7 +33,7 @@ loop:
 
     # FUNCTION CALL
     # -----------------
-    lw      $a0, p          # Load 'p' as argument
+    lw      $a0, p          # Pass p
     jal     extract         # Call extract()
     move    $s0, $v0
 
