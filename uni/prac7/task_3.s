@@ -70,8 +70,14 @@ loop:
     syscall
 
     # Display signed
-    sll     $s0, $s0, 27    # Ensure sign extension
-    sra     $s0, $s0, 27    # Return to position
+    # Load values
+    lw      $t1, n          # Load n
+    lw      $t2, max        # Total bits in a word
+    sub     $t0, $t2, $t1   # 32 - n gives the number of bits left
+    
+    # Dynamic Shift for Sign Extension
+    sll     $s0, $s0, $t0   # Ensure sign extension
+    sra     $s0, $s0, $t0   # Return to position
 
     jal     print_newline   # print newline
 
@@ -167,7 +173,8 @@ extraExt:
 # Return: Mask
 create_mask:
     # Save stack
-    sub     $sp, $sp, 4     # Make a space for one item
+    sub     $sp, $sp, 8     # Make a space for one item
+    sw      $ra, 4 ($sp)    # Save $ra
     sw      $s0, 0 ($sp)    # Save $s0
 
     # Setting up mask with n
@@ -179,8 +186,9 @@ create_mask:
     sll     $v0, $s0, $a1   # Finally, offset the mask by m bits.
 
     # Restore stack
-    lw      $s0, 0 ($sp)    # Restore $ra
-    add     $sp, $sp, 4     # Free up stack
+    lw      $s0, 0 ($sp)    # Restore $s0
+    lw      $ra, 4 ($sp)    # Restore $ra
+    add     $sp, $sp, 8     # Free up stack
 
     jr      $ra             # Return to caller
 
