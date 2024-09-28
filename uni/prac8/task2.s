@@ -1,11 +1,13 @@
 .data
 # Strings
-result: .asciiz "Speedup = "
+result: .asciiz "\nSpeedup (Fp proportion: "
+end_bracket: .asciiz ") = "
 
 # Numbers
-T: .double 0.0
+T: .double 1.0
 N: .double 5.0
 t2: .double 0.0
+increment: .double 0.1
 speedup: .double 0.0
 
 .text
@@ -15,6 +17,10 @@ main:
     # --------------------
     addu    $s7, $0, $ra    # Initial save address
 
+    # Initialise index
+    li      $t0, 11
+
+loop:
     # FUNCTION CALL
     # --------------------
     la      $a0, T              # Load 'T'
@@ -25,11 +31,36 @@ main:
 
     # OUTPUT MESSAGE
     # --------------------
-    
+    li      $v0, 4              # print_str (system call 4)
+    la      $a0, result         # Load 'result' string
+    syscall
+
+    li      $v0, 3
+    l.d     $f12, t2
+    syscall
+
+    li      $v0, 4
+    la      $a0, end_bracket
+    syscall
+
+    li      $v0, 3              # print_double (system call 3)  
+    l.d     $f12, speedup       # Load 'speedup' double 
+    syscall
+
+    # Update index and t2
+    sub     $t0, $t0, 1          # Decrement index by 1
+    l.d     $f2, t2              # Load double from t2 into $f2
+    l.d     $f4, increment       # Load constant 0.1 into $f4
+    add.d   $f2, $f2, $f4        # Add $f2 and $f4, store result in $f2
+    s.d     $f2, t2              # Increment t2 by 0.1
+
+    # Brach if index is not equal to zero
+    bnez    $t0, loop
 
     # END
     # --------------------
     j       exit_program
+
 
 calculate_speedup:
     # SAVE STACK
@@ -43,8 +74,8 @@ calculate_speedup:
     # LOAD ARGUMENTS
     # --------------------
     l.d     $f2, 0 ($a0)    # Load 'T' to f2
-    l.d     $f4, 0 ($a1)    # Load 'N' to f2
-    l.d     $f6, 0 ($a2)    # Load 't2' to f2
+    l.d     $f4, 0 ($a1)    # Load 'N' to f4
+    l.d     $f6, 0 ($a2)    # Load 'p' to f6
 
     # CALCULATE SPEEDUP
     # --------------------

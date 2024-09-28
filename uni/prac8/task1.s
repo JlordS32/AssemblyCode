@@ -114,8 +114,8 @@ calculate_speedup:
     # LOAD ARGUMENTS
     # --------------------
     l.d     $f2, 0 ($a0)    # Load 'T' to f2
-    l.d     $f4, 0 ($a1)    # Load 'N' to f2
-    l.d     $f6, 0 ($a2)    # Load 't2' to f2
+    l.d     $f4, 0 ($a1)    # Load 'N' to f4
+    l.d     $f6, 0 ($a2)    # Load 't2' to f6
 
     # CALCULATE SPEEDUP
     # --------------------
@@ -138,7 +138,7 @@ calculate_speedup:
     lw      $a2, 0 ($sp)    # Restore $a2
     lw      $a1, 4 ($sp)    # Restore $a1
     lw      $a0, 8 ($sp)    # Restore $a0
-    lw      $ra, 12 ($sp)    # Restore return address
+    lw      $ra, 12 ($sp)   # Restore return address
     add     $sp, $sp, 16    # Free up the stack
 
     # RETURN
