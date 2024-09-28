@@ -1,9 +1,10 @@
 .data
 # Strings
-query_T: .asciiz "Enter a value (T): "
-query_N: .asciiz "Enter a value (N): "
-query_t2: .asciiz "Enter a value (t2): "
+query_T: .asciiz "Enter a value for T: "
+query_N: .asciiz "Enter a value for N (0 - 20): "
+query_t2: .asciiz "Enter a value for t2: "
 result: .asciiz "Speedup = "
+error: .asciiz "\nNumber must be in range! (0 - 20)\n"
 
 # Numbers
 T: .double 0.0
@@ -27,8 +28,7 @@ main:
     s.d     $f0, T          # Save value to T
 
     # Query N
-    la      $a0, query_N    # Load 'query_N' into the function
-    jal     input           # Call input() function
+    jal     input_N         # Call input() function
     s.d     $f0, N          # Save value to N
 
     # Query t2
@@ -68,6 +68,39 @@ input:
     syscall
 
     jr      $ra             # Return to caller
+
+input_N:
+    li      $v0, 4          # syscall to print string
+    la      $a0, query_N    # load address of prompt message
+    syscall
+
+    li      $v0, 7          # syscall to read double
+    syscall                 # read double into $f0
+
+    # Convert integers to double for comparison
+    li      $t1, 0          # Load 0
+    mtc1    $t1, $f2        # move 0 to $f1 (float)
+    cvt.d.w $f2, $f2        # convert word to double
+
+    li      $t2, 21         # Load 21
+    mtc1    $t2, $f4        # move 21 to $f2 (float)
+    cvt.d.w $f4, $f4        # convert word to double
+
+    # Check if less than 0
+    c.lt.d  $f0, $f2        # compare if input < 0
+    bc1t    display_error   # if true, jump to error
+
+    # Check if greater than 20
+    c.lt.d  $f0, $f4        # compare if input < 20
+    bc1f    display_error   # if false, jump to error
+
+    jr      $ra              # return from function
+
+display_error:
+    li      $v0, 4           # syscall to print string
+    la      $a0, error       # load address of error message
+    syscall
+    j       input_N        # jump back to input prompt
 
 calculate_speedup:
     # SAVE STACK
