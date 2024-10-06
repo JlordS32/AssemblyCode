@@ -1,5 +1,5 @@
 .data
-msg:            .asciiz "Start entering characters (Buffer size; 'Enter' to terminate):\n"
+msg:            .asciiz "Start entering characters (Buffer size 5; 'Enter' to terminate):\n"
 end:            .asciiz "\nPROGRAM TERMINATED...\n"
 buffer_full_msg:.asciiz "\nBuffer is full, displaying contents:\n"
 final_msg:      .asciiz "\nRemaining:\n"
@@ -142,10 +142,6 @@ exit:
 
     li      $v0, 1              # print_int
     lw      $a0, total          # Load the value of total
-    syscall 
-
-    li      $v0, 4              # print_str
-    la      $a0, total_msg      # Load address of 'end'
     syscall 
 
     li      $v0, 4              # print_str
