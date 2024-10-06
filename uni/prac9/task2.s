@@ -1,8 +1,9 @@
 .data
-msg:            .asciiz "Enter any characters (Press 'Enter' to exit):\n"
+msg:            .asciiz "Start entering characters (Buffer size 5):\n"
 end:            .asciiz "\nPROGRAM TERMINATED...\n"
 buffer_full_msg:.asciiz "\nBuffer is full, displaying contents:\n"
 buffer:         .space 6          
+buffer_size:    .word 6
 
 .text
 .globl main
@@ -13,7 +14,7 @@ main:
 
     # PRINT INITIAL MESSAGE
     # --------------------
-    li      $v0, 4              # syscall code for print_string
+    li      $v0, 4              # print_str
     la      $a0, msg            # Load address of 'msg'
     syscall 
 
@@ -43,7 +44,7 @@ read_loop:
 
     # CHECK IF BUFFER IS FULL
     # --------------------
-    li      $t4, 6              # Buffer size
+    lw      $t4, buffer_size        # Buffer size
     beq     $t3, $t4, buffer_full   # If buffer is full, proceed
 
     j       read_loop           # Continue reading characters
@@ -51,7 +52,7 @@ read_loop:
 buffer_full:
     # PRINT 
     # --------------------
-    li      $v0, 4              # syscall code for print_string
+    li      $v0, 4              # print_str
     la      $a0, buffer_full_msg    # Load address of 'buffer_full_msg'
     syscall 
 
@@ -79,13 +80,13 @@ display_loop:
 
     # CHECK IF ALL CHARACTERS HAVE BEEN DISPLAYED
     # --------------------
-    li      $t4, 6              # Buffer size
+    lw      $t4, buffer_size    # Buffer size
     bne     $t3, $t4, display_loop  # If not done, continue displaying
 
 exit:
     # PRINT TERMINATION MESSAGE
     # --------------------
-    li      $v0, 4              # syscall code for print_string
+    li      $v0, 4              # print_str
     la      $a0, end            # Load address of 'end'
     syscall 
 

@@ -1,8 +1,13 @@
 .data
-msg:            .asciiz "Enter any characters (Press 'Enter' to exit):\n"
+msg:            .asciiz "Start entering characters (Buffer size; 'Enter' to terminate):\n"
 end:            .asciiz "\nPROGRAM TERMINATED...\n"
 buffer_full_msg:.asciiz "\nBuffer is full, displaying contents:\n"
-buffer:         .space 6          
+final_msg:      .asciiz "\nRemaining:\n"
+total_msg:      .asciiz "\nTotal characters: "
+buffer:         .space 5          
+buffer_size:    .word 5
+terminator:     .asciiz "\n"
+total:          .word 0
 
 .text
 .globl main
@@ -13,7 +18,7 @@ main:
 
     # PRINT INITIAL MESSAGE
     # --------------------
-    li      $v0, 4              # syscall code for print_string
+    li      $v0, 4              # print_str
     la      $a0, msg            # Load address of 'msg'
     syscall 
 
@@ -26,6 +31,7 @@ main:
     # --------------------
     li      $t3, 0              # Counter for number of characters read
     la      $t2, buffer         # Buffer pointer (address of 'buffer')
+    lw      $s1, total          # Load total counter
 
 read_loop:
     # READ CHARACTER FROM KEYBOARD
@@ -33,7 +39,7 @@ read_loop:
     lw      $t1, 0($t0)         # Load Receiver Control Register
     andi    $t1, $t1, 0x0001    # Check Ready Bit (Bit 0)
     beq     $t1, $zero, read_loop  # If not ready, loop
-    lb      $s0, 4($t0)         # Load character from Receiver Data Register
+    lb      $s0, 4($t0)         # Load character to Receiver Data Register
 
     # STORE CHARACTER IN BUFFER
     # --------------------
@@ -41,9 +47,19 @@ read_loop:
     addi    $t2, $t2, 1         # Increment buffer pointer
     addi    $t3, $t3, 1         # Increment character counter
 
+    # VALIDATE
+    # --------------------
+    lbu     $t5, terminator     # Load 'terminator'
+    beq     $t5, $s0, exit_early    # Branch if input matches terminator
+
+    # INCREMENT TOTAL
+    # --------------------
+    addi    $s1, $s1, 1         # Increment current value of character counter
+    sw      $s1, total          # Update variable 'total'
+
     # CHECK IF BUFFER IS FULL
     # --------------------
-    li      $t4, 6              # Buffer size
+    lw      $t4, buffer_size    # Buffer size
     beq     $t3, $t4, buffer_full   # If buffer is full, proceed
 
     j       read_loop           # Continue reading characters
@@ -51,7 +67,7 @@ read_loop:
 buffer_full:
     # PRINT 
     # --------------------
-    li      $v0, 4              # syscall code for print_string
+    li      $v0, 4              # print_str
     la      $a0, buffer_full_msg    # Load address of 'buffer_full_msg'
     syscall 
 
@@ -77,15 +93,62 @@ display_loop:
     addi    $t2, $t2, 1         # Increment buffer pointer
     addi    $t3, $t3, 1         # Increment character counter
 
+    # VALIDATE EXIT PROGRAM
+    # --------------------
+    lbu     $t5, terminator     # Load 'terminator'
+    beq     $s0, $t5, exit      # If character matches terminator -> exit()
+
     # CHECK IF ALL CHARACTERS HAVE BEEN DISPLAYED
     # --------------------
-    li      $t4, 6              # Buffer size
+    lw      $t4, buffer_size    # Buffer size
     bne     $t3, $t4, display_loop  # If not done, continue displaying
 
-exit:
-    # PRINT TERMINATION MESSAGE
     # --------------------
-    li      $v0, 4              # syscall code for print_string
+    # END
+    # --------------------
+
+    # SETUP MEMORY-MAPPED I/O BASE ADDRESS
+    # --------------------
+    li      $t0, 0xFFFF         # Load upper 16 bits
+    sll     $t0, $t0, 16        # Shift left to get 0xFFFF0000
+
+    # RESET BUFFER POINTER AND COUNTER
+    # --------------------
+    li      $t3, 0              # Counter for number of characters read
+    la      $t2, buffer         # Buffer pointer (address of 'buffer')
+
+    j       read_loop           # Loop
+
+exit_early:
+    # PRINT 
+    # --------------------
+    li      $v0, 4              # print_str
+    la      $a0, final_msg      # Load address of 'final_msg'
+    syscall 
+
+    # RESET BUFFER POINTER
+    # --------------------
+    la      $t2, buffer         # Reset buffer pointer to start of 'buffer'
+    li      $t3, 0              # Reset character counter
+
+    j       display_loop
+
+exit:
+    # PRINT
+    # --------------------
+    li      $v0, 4              # print_str
+    la      $a0, total_msg      # Load address of 'total_msg'
+    syscall
+
+    li      $v0, 1              # print_int
+    lw      $a0, total          # Load the value of total
+    syscall 
+
+    li      $v0, 4              # print_str
+    la      $a0, total_msg      # Load address of 'end'
+    syscall 
+
+    li      $v0, 4              # print_str
     la      $a0, end            # Load address of 'end'
     syscall 
 
