@@ -134,6 +134,7 @@ ret:
 # Return from (non-interrupt) exception. Skip offending instruction
 # at EPC to avoid infinite loop.
 #
+
 	mfc0 $k0 $14		# Bump EPC register
 	addiu $k0 $k0 4		# Skip faulting instruction
 				# (Need to handle delayed branch case here)

@@ -65,6 +65,7 @@ __excp:	.word __e0_, __e1_, __e2_, __e3_, __e4_, __e5_, __e6_, __e7_, __e8_, __e
 	.word __e28_, __e29_, __e30_, __e31_
 s1:	.word 0
 s2:	.word 0
+special_msg: .asciiz "Adjusting for Exception 7...\n\n"
 
 # This is the exception handler code that the processor runs when
 # an exception occurs. It only prints some information about the
@@ -116,6 +117,15 @@ s2:	.word 0
 	li $v0 10		# Exit on really bad PC
 	syscall
 
+exception_7:
+	li 	$v0 4		# syscall 4 (print_str)
+	la 	$a0 special_msg
+	syscall
+
+	li 	$t1 0x10010000
+
+	j	ret
+
 ok_pc:
 	li $v0 4		# syscall 4 (print_str)
 	la $a0 __m2_
@@ -123,6 +133,7 @@ ok_pc:
 
 	srl $a0 $k0 2		# Extract ExcCode Field
 	andi $a0 $a0 0x1f
+	beq $a0 0x7 exception_7
 	bne $a0 0 ret		# 0 means exception was an interrupt
 	nop
 
@@ -134,19 +145,20 @@ ret:
 # Return from (non-interrupt) exception. Skip offending instruction
 # at EPC to avoid infinite loop.
 #
+
 	mfc0 $k0 $14		# Bump EPC register
 	addiu $k0 $k0 4		# Skip faulting instruction
 				# (Need to handle delayed branch case here)
 	mtc0 $k0 $14
 
-
 # Restore registers and reset procesor state
 #
+	lw $v0 s1		# Restore other registers
+	lw $a0 s2
+
 	.set noat
 	move $at $k1		# Restore $at
 	.set at
-	lw $v0 s1		# Restore other registers
-	lw $a0 s2
 
 	mtc0 $0 $13		# Clear Cause register
 
