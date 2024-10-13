@@ -1,8 +1,7 @@
 .data
 input_A: .asciiz "\nEnter number for A: "
 input_B: .asciiz "\nEnter number for B: "
-error_msg: .asciiz "\NUMBER OUT OF RANGE!\n"
-number_bit: .word 32
+error_msg: .asciiz "\nNumber must be in range (0 - 255): \n"
 
 .text
 .globl main
@@ -23,7 +22,7 @@ main:
     # Load adder
     move    $a0, $t0
     move    $a1, $t1
-    jal     bit_adder
+    jal     eight_bit_adder
     move    $t0, $v0
 
     li      $v0, 1
@@ -32,7 +31,7 @@ main:
 
     j       exit_program
 
-bit_adder:
+eight_bit_adder:
     # Save items into the stack
     sub     $sp, $sp, 20
     sw      $ra, 0 ($sp)
@@ -43,15 +42,16 @@ bit_adder:
 
     # Initialize registers
     addu    $s0, $0, $a0            # A
+    and     $s0, $s0, 0xFF          # Ensure input is 8-bit
     addu    $s1, $0, $a1            # B
+    and     $s1, $s1, 0xFF          # Ensure input is 8-bit
     addi    $s2, 0                  # Result register
     addi    $s3, 0                  # Carry register (Carry_in and Carry_out)
     li      $t0, 0                  # Bit position counter (i = 0)
 
 bit_loop:
     # Check if all bits have been processed
-    lw      $t9, number_bit
-    bge     $t0, $t9, end_addition
+    bge     $t0, 8, end_addition
 
     # Extract A_i
     srlv    $t1, $s0, $t0           # Shift A right by i bits
@@ -60,6 +60,24 @@ bit_loop:
     # Extract B_i
     srlv    $t2, $s1, $t0           # Shift B right by i bits
     andi    $t2, $t2, 0x1           # B_i = (B >> i) & 1
+
+    # If i == 0, use half adder
+    bne     $t0, $zero, full_adder
+
+half_adder:
+    # GET: Sum_i = A_i XOR B_i
+    xor     $t3, $t1, $t2           # $t3 = Sum_i
+
+    # GET: Carry_out = A_i AND B_i
+    and     $s3, $t1, $t2           # $s3 = Carry_out (for next bit)
+
+    # Set Sum_i at bit position i in result
+    sllv    $t4, $t3, $t0           # Shift Sum_i left by i bits
+    or      $s2, $s2, $t4           # $s2 |= Sum_i << i
+
+    # Increment bit position counter (i++)
+    addi    $t0, $t0, 1
+    j       bit_loop
 
 full_adder:
     # GET: Sum_i
@@ -82,6 +100,7 @@ full_adder:
 
 end_addition:
     addu    $v0, $0, $s2            # Copy result value to return
+    andi    $v0, $v0, 0xFF          # Ensure it's 255 bits
 
     # Restore callee-saved registers and return address
     lw      $ra, 0($sp)
@@ -95,10 +114,9 @@ end_addition:
 
 query: 
     # Make a space into the stack
-    sub     $sp, $sp, 12
+    sub     $sp, $sp, 8
     sw      $ra, 0 ($sp)
     sw      $s0, 4 ($sp)
-    sw      $s1, 8 ($sp)
 
     li      $v0, 4
     syscall
@@ -107,13 +125,9 @@ query:
     syscall
 
     # VALIDATE IF NUMBER IN RANGE
-    lw      $s1, number_bit
-    addi    $s1, $s1, -1
-    li      $s0, 1
-    sllv    $s0, $s0, $s1           # Move bit to n - 1
+    addi    $s0, $0, 255            # Load 128
     bgt     $v0, $s0, query_error   # Branch if number greatan 128
 
-    lw      $s1, 8 ($sp)
     lw      $s0, 4 ($sp)
     lw      $ra, 0 ($sp)
     add     $sp, $sp, 8
