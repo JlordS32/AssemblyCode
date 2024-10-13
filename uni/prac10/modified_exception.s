@@ -122,7 +122,8 @@ exception_7:
 	la 	$a0 special_msg
 	syscall
 
-	li 	$t1 0x10010000
+	lui $t1 0x1001
+	ori $t1 $t1 0x0000
 
 	j	ret
 
@@ -146,10 +147,10 @@ ret:
 # at EPC to avoid infinite loop.
 #
 
-	mfc0 $k0 $14		# Bump EPC register
-	addiu $k0 $k0 4		# Skip faulting instruction
-				# (Need to handle delayed branch case here)
-	mtc0 $k0 $14
+	# mfc0 $k0 $14		# Bump EPC register
+	# addiu $k0 $k0 4		# Skip faulting instruction
+	# 			# (Need to handle delayed branch case here)
+	# mtc0 $k0 $14
 
 # Restore registers and reset procesor state
 #
