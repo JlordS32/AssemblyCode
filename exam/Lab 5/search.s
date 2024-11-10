@@ -11,8 +11,9 @@
 # The loop is controlled by the index starting at 0.
   
     .data
+    .align 2
 Alen:    .word  10
-Astart:  .word  1,-2,-3,-1,3,6,-7,2,0,-9
+Astart:  .word  1, -2, -3, -1, 3, 6, -7, 2, 0, -9
 Key:     .space  4
 Index:   .word  -1
 
@@ -42,12 +43,15 @@ message1:  .asciiz  "\nSearch for the element with the value: "  #string to prin
     sw    $t4, Key          # key stored
 
 loop:
-    add   $t1, $t0, $t0
-    add   $t1, $t1, $t1     # calculate byte displacement as 4 times index
+    add   $t1, $0, $t0
+    sll   $t1, $t1, 2
+
     lw    $t3, Astart($t1)  # load element of array A
     beq   $t3, $t4, L1      # goto exit if current entry has right value
+
     addi  $t0, $t0, 1       # increment index
-    bne   $t0, $t2, loop    # terminate loop once new index equals Alen
+
+    blt   $t0, $t2, loop    # terminate loop once new index equals Alen
 L1:
     sw   $t0, Index         # store answer in memory
     .data
