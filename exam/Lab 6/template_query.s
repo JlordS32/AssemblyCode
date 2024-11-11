@@ -1,7 +1,9 @@
 .data
-query_msg: .asciiz "Enter n (2 - 45): "
+query_msg: .asciiz "Enter N (0 - 20): "
 error_msg: .asciiz "Error: Number not in range!\n"
 n: .word 0
+MIN: .word 0
+MAX: .word
 
 .text
 .globl main
@@ -18,9 +20,8 @@ main:
 
 query:
     sub     $sp, $sp, 12        # Make space for two items
-    sw      $ra, 8 ($sp)        # Save $ra 
-    sw      $s0, 4 ($sp)        # Save $s0 
-    sw      $s1, 0 ($sp)        # Save $s1 
+    sw      $ra, 4 ($sp)        # Save $ra 
+    sw      $s0, 0 ($sp)        # Save $s0 
 
 query_loop:
     li      $v0, 4              # print_str (syscall 4)
@@ -30,14 +31,13 @@ query_loop:
     li      $v0, 5              # read_int
     syscall
 
-    li      $s0, 2
+    lw      $s0, MIN
     blt     $v0, $s0, error     # Branch if less than 2
-    li      $s1, 45
-    bgt     $v0, $s1, error     # Branch if greater than 45
+    lw      $s0, MAX
+    bgt     $v0, $s0, error     # Branch if greater than 45
 
-    lw      $s1, 0 ($sp)        # Restore $s1 
-    lw      $s0, 4 ($sp)        # Restore $s0 
-    lw      $ra, 8 ($sp)        # Restore $ra 
+    lw      $s0, 0 ($sp)        # Restore $s0 
+    lw      $ra, 4 ($sp)        # Restore $ra 
     add     $sp, $sp, 12        # Make space for two items
 
     jr      $ra 
