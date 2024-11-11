@@ -18,7 +18,10 @@ main:
 
     # CALLING FIB() 
     # ----------------------
-    lw      $a0, n              # Load value in 'n' as param.
+    lw      $s0, n              # Load n
+    move    $a0, $s0            # term = n ($a0)
+    li      $a1, 1              # val = $a1           
+    li      $a2, 0              # prev = $a2
     jal     fib                 # Call fib
     move    $s1, $v0
 
@@ -43,44 +46,47 @@ main:
 
     j       exit_program
 
+# FIBONACCI FUNCTION
+#   int fib(int term, int val = 1, int prev = 0)
+#   {
+#       if(term == 0) return prev;
+#       return fib(term - 1, val + prev, val);
+#   }
+.globl fib
+# a0 = term
+# a1 = val
+# a2 = prev
 fib:
-    sub     $sp, $sp, 16        # Make space for five items
-    sw      $ra, 12 ($sp)       # Save $ra 
-    sw      $s0, 8 ($sp)        # Save $s0 
-    sw      $s1, 4 ($sp)        # Save $s1 
-    sw      $s2, 0 ($sp)        # Save $s1
+    # Base case: if term == 0 ($a0 == 0), return prev
+    beq     $a0, $0, fib_base
 
-    # Initialize base case
-    li      $s0, 0              # Fib(0) or Fib(n-2) = 0
-    li      $s1, 1              # Fib(1) or Fib(n-1) = 1
+    sub     $sp, $sp, 12        # Make space for five items
+    sw      $ra, 8($sp)         # Save return address
+    sw      $a0, 4($sp)         # Save term
+    sw      $a1, 0($sp)         # Save val
 
-    # Initialise index counter
-    move    $t0, $a0            # Load n to $t0
+    # Compute fib(term - 1, val + prev, val)
+    add     $t0, $a1, $a2       # $t0 = val + prev
+    move    $t1, $a1            # $t1 = val
+    
+    # Passing arguments
+    addi    $a0, $a0, -1        # term = term - 1
+    move    $a1, $t0            # val = $t2 (val + prev)
+    move    $a2, $t1            # prev = $t1 (val)
 
-    # Decrement counter for n - 1 iterations
-    sub     $t0, $t0, 1         # t0 = t0 - 1 (we need n-1 iterations)
+    jal     fib
 
-fib_loop:
-    # Perform F(n) = Fib(0) + Fib(1)
-    add     $s2, $s0, $s1       
+    # Restore registers after recursive call
+    lw      $a1, 0($sp)         # Restore val
+    lw      $a0, 4($sp)         # Restore term
+    lw      $ra, 8($sp)         # Restore return address
+    addi    $sp, $sp, 12        # Free stack space
 
-    # Update Fib(n-2) and Fib(n-1) for the next Fib sequence.
-    move    $s0, $s1            # Fib(n-2)
-    move    $s1, $s2            # Fib(n-1)
+    jr      $ra                 # Return to caller
 
-    # Decrement counter
-    sub     $t0, $t0, 1         # Decrement counter
-    bgtz    $t0, fib_loop       # if t2 > 0, repeat loop
-    move    $v0, $s1            # Move result to $v0
-
-    lw      $s2, 0 ($sp)        # Restore $s1
-    lw      $s1, 4 ($sp)        # Restore $s1 
-    lw      $s0, 8 ($sp)        # Restore $s0 
-    lw      $ra, 12 ($sp)       # Restore $ra 
-    add     $sp, $sp, 16        # Free stack
-
-    # Result is in Fib (n - 1)
-    jr      $ra
+fib_base:
+    move    $v0, $a2            # Return prev as the result
+    jr      $ra                 # Return to caller       
 
 query:
     sub     $sp, $sp, 12        # Make space for two items
