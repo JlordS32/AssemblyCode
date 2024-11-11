@@ -22,7 +22,8 @@ main:
     # ----------------------
     lw      $a0, n              # Load value in 'n' as param.
     jal     fib                 # Call fib
-    move    $s1, $v0
+    mtc1    $v0, $f12
+    mtc1    $v1, $f13
 
     # PRINT
     # ----------------------
@@ -39,22 +40,18 @@ main:
     la      $a0, fib_msg_2
     syscall
 
-    li      $v0, 1
-    move    $a0, $s1
+    li      $v0, 3              # print_double (syscall 3)
     syscall
 
     j       exit_program
 
 fib:
-    sub     $sp, $sp, 16        # Make space for five items
-    sw      $ra, 12 ($sp)       # Save $ra 
-    sw      $s0, 8 ($sp)        # Save $s0 
-    sw      $s1, 4 ($sp)        # Save $s1 
-    sw      $s2, 0 ($sp)        # Save $s1
+    sub     $sp, $sp, 4         # Make space for five items
+    sw      $ra, 0 ($sp)        # Save $ra 
 
     # Initialize base case
-    li      $s0, 0              # Fib(0) or Fib(n-2) = 0
-    li      $s1, 1              # Fib(1) or Fib(n-1) = 1
+    li.d      $f14, 0.0         # Fib(0) or Fib(n-2) = 0
+    li.d      $f16, 1.0         # Fib(1) or Fib(n-1) = 1
 
     # Initialise index counter
     move    $t0, $a0            # Load n to $t0
@@ -64,22 +61,20 @@ fib:
 
 fib_loop:
     # Perform F(n) = Fib(0) + Fib(1)
-    add     $s2, $s0, $s1       
+    add.d   $f18, $f14, $f16
 
     # Update Fib(n-2) and Fib(n-1) for the next Fib sequence.
-    move    $s0, $s1            # Fib(n-2)
-    move    $s1, $s2            # Fib(n-1)
+    mov.d   $f14, $f16          # Fib(n-2)
+    mov.d   $f16, $f18          # Fib(n-1)
 
     # Decrement counter
     sub     $t0, $t0, 1         # Decrement counter
     bgtz    $t0, fib_loop       # if t2 > 0, repeat loop
-    move    $v0, $s1            # Move result to $v0
+    mfc1    $v0, $f18           # Move result to $v0
+    mfc1    $v1, $f19           # Move result to $v0
 
-    lw      $s2, 0 ($sp)        # Restore $s1
-    lw      $s1, 4 ($sp)        # Restore $s1 
-    lw      $s0, 8 ($sp)        # Restore $s0 
-    lw      $ra, 12 ($sp)       # Restore $ra 
-    add     $sp, $sp, 16        # Free stack
+    lw      $ra, 0 ($sp)        # Restore $ra 
+    add     $sp, $sp, 4         # Free stack
 
     # Result is in Fib (n - 1)
     jr      $ra
@@ -100,7 +95,7 @@ query_loop:
 
     lw      $s0, MIN
     blt     $v0, $s0, error     # Branch if less than MIN
-    lw      $s0, MAX
+    lw      $s1, MAX
     bgt     $v0, $s1, error     # Branch if greater than MAX
 
     lw      $s1, 0 ($sp)        # Restore $s1 
